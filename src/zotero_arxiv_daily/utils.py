@@ -92,21 +92,22 @@ def glob_match(path:str, pattern:str) -> bool:
     re_pattern = glob.translate(pattern,recursive=True)
     return re.match(re_pattern, path) is not None
 
-def send_email(config:DictConfig, html:str):
+def send_email(config: DictConfig, html: str):
     sender = config.email.sender
     receiver = config.email.receiver
     password = config.email.sender_password
     smtp_server = config.email.smtp_server
-    smtp_port = config.email.smtp_port
+    smtp_port = int(config.email.smtp_port)   # 关键：强制转 int
+
     def _format_addr(s):
         name, addr = parseaddr(s)
-        return formataddr((Header(name, 'utf-8').encode(), addr))
+        return formataddr((Header(name, "utf-8").encode(), addr))
 
-    msg = MIMEText(html, 'html', 'utf-8')
-    msg['From'] = _format_addr('Github Action <%s>' % sender)
-    msg['To'] = _format_addr('You <%s>' % receiver)
-    today = datetime.datetime.now().strftime('%Y/%m/%d')
-    msg['Subject'] = Header(f'Daily arXiv {today}', 'utf-8').encode()
+    msg = MIMEText(html, "html", "utf-8")
+    msg["From"] = _format_addr(f"Github Action <{sender}>")
+    msg["To"] = _format_addr(f"You <{receiver}>")
+    today = datetime.datetime.now().strftime("%Y/%m/%d")
+    msg["Subject"] = Header(f"Daily arXiv {today}", "utf-8").encode()
 
     if smtp_port == 465:
         server = smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=30)
@@ -115,7 +116,7 @@ def send_email(config:DictConfig, html:str):
         server.ehlo()
         server.starttls()
         server.ehlo()
-    
+
     server.login(sender, password)
     server.sendmail(sender, [receiver], msg.as_string())
     server.quit()
