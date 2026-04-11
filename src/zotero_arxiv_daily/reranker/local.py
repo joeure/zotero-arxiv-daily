@@ -26,11 +26,25 @@ class LocalReranker(BaseReranker):
 
         model_name = self.config.reranker.local.model
         trust_remote_code = getattr(self.config.reranker.local, "trust_remote_code", False)
-        self.encoder = SentenceTransformer(model_name, trust_remote_code=trust_remote_code)
+
+        self.encoder = SentenceTransformer(
+            model_name,
+            trust_remote_code=trust_remote_code,
+        )
 
     def get_similarity_score(self, s1: list[str], s2: list[str]) -> np.ndarray:
         encode_kwargs = self.config.reranker.local.encode_kwargs or {}
-        s1_feature = self.encoder.encode(s1, **encode_kwargs, show_progress_bar=True)
-        s2_feature = self.encoder.encode(s2, **encode_kwargs, show_progress_bar=True)
+
+        s1_feature = self.encoder.encode(
+            s1,
+            **encode_kwargs,
+            show_progress_bar=True,
+        )
+        s2_feature = self.encoder.encode(
+            s2,
+            **encode_kwargs,
+            show_progress_bar=True,
+        )
+
         sim = self.encoder.similarity(s1_feature, s2_feature)
         return sim.numpy()
